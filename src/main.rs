@@ -1,13 +1,20 @@
+use crate::assembler::Assembler;
 use crate::cpu::CPU;
 mod cpu;
 mod instruction;
+mod assembler;
 
 fn main() {
-    let prgm: Vec<u8> = vec![
-        0x93, 0x00, 0x30, 0x00,  // add 3 to  r1
-        0x13, 0x01, 0xC0, 0x00, // add 12 to r2 
-        0x73, 0x00, 0x10, 0x00 // break
-    ];
+    let assembler = Assembler::open_file("./programs/test1.rv");
+    let instrs = assembler.assemble();
+    let mut prgm: Vec<u8> = vec![];
+    for instr in instrs {
+        prgm.push((instr & 0xFF) as u8 );
+        prgm.push(((instr & (0xFF << 8)) >> 8) as u8 );
+        prgm.push(((instr & (0xFF << 16)) >> 16) as u8 );
+        prgm.push(((instr & (0xFF << 24)) >> 24) as u8 );
+    }
+    println!("{:#?}", prgm);
     let mut cpu = CPU::new();
     cpu.load_program(&prgm);
     cpu.run();
