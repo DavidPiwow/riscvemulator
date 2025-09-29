@@ -1,7 +1,8 @@
-addi r1, r0, #3
-addi r2, r0, #12
-add r3, r1, r2
-sub r1, r1, r3
+addi x1, x0, #42
+addi x2, x0, #42
+addi x3, x0, #1
+beq  x1, x2, #8
+addi x4, x0, #2
+addi x5, x0, #3
+addi x6, x0, #4
 ebreak
-
-

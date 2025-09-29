@@ -1,12 +1,13 @@
 use std::fmt::{Debug, Formatter};
 
+#[derive(Debug)]
 pub enum InstructionType {
-    R_INSTR,
-    I_INSTR,
-    S_INSTR,
-    B_INSTR,
-    U_INSTR,
-    J_INSTR,
+    RInstr,
+    IInstr,
+   // SInstr,
+    BInstr,
+  //  UInstr,
+  //  JInstr,
 }
 
 #[inline(always)]
@@ -40,14 +41,16 @@ fn funct7_f_u32(n: u32) -> u8 {
 }
 
 #[inline(always)]
-fn imm_i_f_u32(n: u32) -> u16 {
-    ((n >> 20) & 0xFFF) as u16
+fn imm_i_f_u32(n: u32) -> i16 {
+    ((n >> 20) & 0xFFF) as i16
 }
 
-pub trait Instruction {
-    fn get_type(&self) -> InstructionType;
-    fn get_opcode(&self) -> u8;
+#[inline(always)]
+fn imm_b_f_u32(n: u32) -> i16 {
+
+    (((n>>31) & 0x1) << 12 | ((n>>7) & 0x1) << 11 |  ((n>>25)&0x3F) << 5 |  ((n >> 8) & 0xF) << 1  ) as i16
 }
+
 
 pub struct RInstruction {
     pub opcode: u8,
@@ -81,22 +84,13 @@ impl Debug for RInstruction {
     }
 }
 
-impl Instruction for RInstruction {
-    fn get_type(&self) -> InstructionType {
-        InstructionType::R_INSTR
-    }
-
-    fn get_opcode(&self) -> u8 {
-        self.opcode
-    }
-}
 
 pub struct IInstruction {
     pub opcode: u8,
     pub rd: u8,
     pub funct3: u8,
     pub rs1: u8,
-    pub imm: u16,
+    pub imm: i16,
 }
 
 impl IInstruction {
@@ -121,12 +115,35 @@ impl Debug for IInstruction {
     }
 }
 
-impl Instruction for IInstruction {
-    fn get_type(&self) -> InstructionType {
-        InstructionType::I_INSTR
-    }
 
-    fn get_opcode(&self) -> u8 {
-        self.opcode
+pub struct BInstruction {
+    pub opcode: u8,
+    pub rs1: u8,
+    pub rs2: u8,
+    pub funct3: u8,
+    pub imm: i16,
+}
+
+impl BInstruction {
+    pub fn new(n: u32) -> Self {
+        Self {
+            opcode: opcode_f_u32(n),
+            funct3: funct3_f_u32(n),
+            rs1: rs1_f_u32(n),
+            rs2: rs2_f_u32(n),
+            imm: imm_b_f_u32(n),
+        }
     }
 }
+
+
+impl Debug for BInstruction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "OPCODE: {:b} | RS1: R{} | RS2: R{} | IMM: {} ",
+            self.opcode, self.rs1, self.rs2, self.imm
+        )
+    }
+}
+

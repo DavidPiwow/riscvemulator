@@ -14,7 +14,6 @@ fn main() {
         prgm.push(((instr & (0xFF << 16)) >> 16) as u8 );
         prgm.push(((instr & (0xFF << 24)) >> 24) as u8 );
     }
-    println!("{:#?}", prgm);
     let mut cpu = CPU::new();
     cpu.load_program(&prgm);
     cpu.run();
