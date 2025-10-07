@@ -1,20 +1,20 @@
-use crate::assembler::Assembler;
-use crate::cpu::CPU;
+use macroquad::color::BLACK;
+use macroquad::window::{clear_background, next_frame};
+use crate::app::{update_app, AppState};
+
 mod cpu;
 mod instruction;
 mod assembler;
+mod app;
 
-fn main() {
-    let assembler = Assembler::open_file("./programs/test1.rv");
-    let instrs = assembler.assemble();
-    let mut prgm: Vec<u8> = vec![];
-    for instr in instrs {
-        prgm.push((instr & 0xFF) as u8 );
-        prgm.push(((instr & (0xFF << 8)) >> 8) as u8 );
-        prgm.push(((instr & (0xFF << 16)) >> 16) as u8 );
-        prgm.push(((instr & (0xFF << 24)) >> 24) as u8 );
+#[macroquad::main("CPU Viewer")]
+async fn main()  {
+    let mut state = AppState::default();
+
+    loop {
+        clear_background(BLACK);
+        update_app(&mut state);
+        next_frame().await
     }
-    let mut cpu = CPU::new();
-    cpu.load_program(&prgm);
-    cpu.run();
+
 }

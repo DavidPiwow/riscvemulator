@@ -47,7 +47,6 @@ fn imm_i_f_u32(n: u32) -> i16 {
 
 #[inline(always)]
 fn imm_b_f_u32(n: u32) -> i16 {
-
     (((n>>31) & 0x1) << 12 | ((n>>7) & 0x1) << 11 |  ((n>>25)&0x3F) << 5 |  ((n >> 8) & 0xF) << 1  ) as i16
 }
 
@@ -55,7 +54,7 @@ fn imm_b_f_u32(n: u32) -> i16 {
 pub struct RInstruction {
     pub opcode: u8,
     pub rd: u8,
-    pub funct3: u8,
+    pub funct3:u8,
     pub rs1: u8,
     pub rs2: u8,
     pub funct7: u8,
@@ -83,7 +82,6 @@ impl Debug for RInstruction {
         )
     }
 }
-
 
 pub struct IInstruction {
     pub opcode: u8,
@@ -136,7 +134,6 @@ impl BInstruction {
     }
 }
 
-
 impl Debug for BInstruction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -146,4 +143,3 @@ impl Debug for BInstruction {
         )
     }
 }
-

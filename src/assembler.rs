@@ -24,17 +24,18 @@ fn get_info() -> HashMap<&'static str, (InstructionType, u8,u8,u8)> {
         ("andi",(IInstr, 0b0010011, 0x7, 0x00)),
 
         ("beq",(BInstr, 0b1100011, 0x0, 0x00)),
+        ("bne",(BInstr, 0b1100011, 0x1, 0x00)),
+        ("blt",(BInstr, 0b1100011, 0x4, 0x00)),
+        ("bge",(BInstr, 0b1100011, 0x5, 0x00)),
 
         ("ebreak",(IInstr, 0b1110011, 0x00, 0x1)),
     ])
 }
 
-
 pub struct Assembler {
     program: Vec<String>,
     instructions: HashMap<&'static str, (InstructionType, u8,u8,u8)>,
 }
-
 
 impl Assembler {
     pub fn open_file(filename: &str) -> Assembler {
@@ -70,16 +71,17 @@ impl Assembler {
     pub fn assemble(&self) -> Vec<u32> {
         let mut bins: Vec<u32> = vec![];
         for instruction in &self.program {
-            println!("{:?}", instruction);
             if instruction == "ebreak" {
                 bins.push(EBREAK);
                 break;
             }
 
             let name = instruction.split_ascii_whitespace().next();
+
             if name.is_none() {
                 break;
             }
+
             let val = match self.instructions.get(name.unwrap()) {
                 Some(val) => val,
                 None => panic!("Instruction {} not found", name.unwrap()),
@@ -99,9 +101,7 @@ impl Assembler {
             //    InstructionType::JInstr => 0,
             };
             bins.push(bin);
-
         }
-
 
         bins
     }
@@ -131,8 +131,8 @@ impl Assembler {
     fn info_to_b(&self, info: &(InstructionType, u8, u8, u8), data: &(u8,u8,i16)) -> u32 {
         let mut binary = (info.1 & 0x7F) as u32; // opcode
 
-        let immp1 = ((data.2 >> 11 & 0x1) | data.2 & 0xF << 1) as i8;
-        let immp2 = (((data.2 >> 12 & 0x1) << 6) | ((data.2) >> 5) & 0x1F)   as i8;
+        let immp1 = ((data.2 >> 11 & 0x1) | data.2 & 0xF << 1) as u8;
+        let immp2 = (((data.2 >> 12 & 0x1) << 6) | ((data.2) >> 5) & 0x1F)   as u8;
 
         binary |= (immp1 as u32) << 7;
 
