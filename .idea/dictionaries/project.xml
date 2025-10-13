@@ -6,6 +6,8 @@
       <w>branchneq</w>
       <w>ebreak</w>
       <w>funct</w>
+      <w>immp</w>
+      <w>instrs</w>
     </words>
   </dictionary>
 </component>

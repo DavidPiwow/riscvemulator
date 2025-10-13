@@ -1,4 +1,8 @@
 addi x1, x1, #4
 addi x2, x2, #10
-sub x2, x0, x2
+sub x2, x1, x2
+
+lw x7, x0, #0
+lw x8, x0, #4
+lw x9, x0, #8
 ebreak

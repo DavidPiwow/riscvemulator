@@ -2,16 +2,16 @@ use crate::assembler::Assembler;
 use crate::cpu::CPU;
 use macroquad::prelude::*;
 use macroquad::ui;
-use macroquad::ui::root_ui;
+use macroquad::ui::{root_ui, Ui};
 use macroquad::ui::widgets::Group;
 use std::fs;
 use ui::{hash, widgets};
+use crate::cpu;
 
 enum CurrentAction {
     SelectProgram(String),
     RunProgram,
-    Pause,
-    End,
+    ViewProgram,
     Wait,
 }
 
@@ -47,9 +47,35 @@ fn get_file_names() -> Vec<String> {
 pub fn update_app(state: &mut AppState) {
     match state.cur_state {
         CurrentAction::RunProgram => draw_cpu_view(state),
+        CurrentAction::ViewProgram => draw_program_view(state),
         _ => draw_main_window(state),
     };
 }
+
+fn describe_program(ui: &mut Ui, program: &Vec<String>) {
+    Group::new(hash!(), vec2(screen_width()/2., screen_height()))
+        .position(vec2(10., 50.))
+        .ui(ui, |ui| {
+            for line in program {
+                ui.label(None, line);
+            }
+        });
+}
+
+fn draw_program_view(state: &mut AppState) {
+    let program = state.assembler.as_ref().unwrap().view_program();
+    widgets::Window::new(hash!(), vec2(0., 0.), vec2(screen_width(), screen_height()))
+        .label("View Program")
+        .titlebar(false)
+        .ui(&mut root_ui(), |ui| {
+            if ui.button(vec2(300., 10.), "Back") {
+                state.cur_state = CurrentAction::Wait;
+            }
+
+            describe_program(ui, &program)
+        });
+}
+
 
 fn draw_cpu_view(state: &mut AppState) {
     match state.cur_state {
@@ -66,20 +92,59 @@ fn draw_cpu_view(state: &mut AppState) {
                     ui.label(None, &format!("Program Counter: {}", state.cpu.get_pc()));
                     if ui.button(None, "Step Program") {
                         state.cpu.step();
-                        println!("{:?}", state.cpu.view_instr_info())
-                    }
-                    let mut i: u32 = 0;
-                    for x in state.cpu.view_registers() {
-                        ui.label(None, &format!("Register {}: {}", i, *x as i32));
-                        i += 1;
                     }
 
-                    if ui.button(vec2(300., 10.), "Reset") {
-                        state.cur_state = CurrentAction::End;
+                    if ui.button(vec2(250., 10.), "Reset") {
+                        state.cpu.reset();
+                    }
+                    if ui.button(vec2(300., 10.), "Back") {
+                        state.cur_state = CurrentAction::Wait;
                         state.cpu.reset();
                     }
 
+                    describe_mem_reg(ui, &state.cpu);
                 });
+            describe_cpu(ui, &state.cpu);
+        });
+}
+
+fn describe_cpu(ui: &mut Ui,cpu: &cpu::CPU)  {
+    let info = cpu.view_instr_info();
+    if info.name.is_none() {
+        return;
+    }
+    Group::new(hash!(), vec2(screen_width()/2., 100.))
+        .position(vec2(screen_width()/2. + 20., 50.))
+        .ui(ui, |ui| {
+            ui.label(None, &format!("Instruction: {}", info.name.clone().unwrap()));
+            if info.rd.is_some() {
+                ui.label(None, &format!("RD: {}", info.rd.unwrap()));
+            }
+            ui.label(None, &format!("R1: {}", info.rs1));
+            if info.rs2.is_some() {
+                ui.label(None, &format!("R2: {}", info.rs2.unwrap()));
+            }
+            if info.imm.is_some() {
+                ui.label(None, &format!("IMM: {}", info.imm.unwrap()));
+            }
+        });
+}
+
+fn describe_mem_reg(ui: &mut Ui,cpu: &cpu::CPU)  {
+    Group::new(hash!(), vec2(screen_width()/2., 200.))
+        .position(vec2(10., 50.))
+        .ui(ui, |ui| {
+            let mut i: u32 = 0;
+            for x in cpu.view_registers() {
+                ui.label(None, &format!("x{}: 0x{:x}", i, *x as i32));
+                i += 1;
+            }
+
+            let mut j: u32 = 0;
+            for x in cpu.view_memory() {
+                ui.label(vec2(100., 15.*j as f32), &format!("M[{}]: 0x{:x}", j, *x as i32));
+                j += 1;
+            }
         });
 }
 
@@ -92,24 +157,24 @@ fn draw_main_window(state: &mut AppState) {
             Group::new(hash!(), vec2(screen_width() - 20.0, 100.))
                 .position(vec2(10., 10.))
                 .ui(ui, |ui| {
+                    change_skin(ui);
+
                     for n in names {
                         if ui.button(None, n.clone()) {
                             state.cur_state = CurrentAction::SelectProgram(n.clone());
+                            set_program(state);
                         }
                     }
 
-                    let label = match &state.cur_state {
-                        CurrentAction::SelectProgram(n) => &format!("Run {}", n.clone()),
-                        _ => "Select a program",
-                    };
+                    if let CurrentAction::SelectProgram(p) = &state.cur_state {
+                        if ui.button(None,  format!("Run {}", p)) {
+                            state.cur_state = CurrentAction::RunProgram;
+                        }
+                    }
 
-                    if ui.button(None, label) {
-                        match &state.cur_state {
-                            CurrentAction::SelectProgram(_) => {
-                                set_program(state);
-                                state.cur_state = CurrentAction::RunProgram;
-                            }
-                            _ => (),
+                    if let CurrentAction::SelectProgram(p) = &state.cur_state {
+                        if ui.button(None, format!("View {}", p)) {
+                            state.cur_state = CurrentAction::ViewProgram;
                         }
                     }
                 });
@@ -118,7 +183,7 @@ fn draw_main_window(state: &mut AppState) {
 
 fn set_program(state: &mut AppState) {
     if let CurrentAction::SelectProgram(n) = &mut state.cur_state {
-        let assembler = Assembler::open_file(&format!("./programs/{}.rv",n));
+        let assembler = Assembler::open_file(&format!("./programs/{}.rv", n));
         let instrs = assembler.assemble();
         let mut prgm: Vec<u8> = vec![];
         for instr in instrs {
@@ -130,4 +195,20 @@ fn set_program(state: &mut AppState) {
         state.assembler = Some(assembler);
         state.cpu.load_program(&prgm);
     }
+}
+
+fn change_skin(ui: &mut Ui) {
+    let mut st = ui.default_skin();
+
+    st.window_style = ui.style_builder().color(BLACK).text_color(WHITE).build();
+    st.label_style = ui.style_builder().text_color(WHITE).build();
+    st.button_style = ui
+        .style_builder()
+        .color(GRAY)
+        .color_hovered(DARKGRAY)
+        .text_color_hovered(GRAY)
+        .text_color(WHITE)
+        .build();
+
+    ui.push_skin(&st.clone());
 }

@@ -1,0 +1,4 @@
+lw x1, x0, x0
+addi x2, x0, #30
+and x3, x1, x2
+ebreak

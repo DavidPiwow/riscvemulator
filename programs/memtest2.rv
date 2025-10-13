@@ -1,0 +1,12 @@
+start:
+    addi x1, x0, 5       # x1 = 5
+    addi x2, x0, 0       # x2 = 0 (sum)
+    addi x3, x0, 1       # x3 = 1 (counter)
+
+loop:
+    add  x2, x2, x3      # sum += counter
+    addi x3, x3, 1       # counter++
+    blt  x3, x1, loop    # if counter < 5, repeat
+
+done:
+    ebreak               # stop

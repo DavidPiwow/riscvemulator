@@ -1,6 +1,6 @@
 addi x1, x0, #100
 addi x2, x0, #100
-bne  x1, x2, #12
+beq  x1, x2, #12
 addi x4, x0, #2
 addi x5, x0, #3
 addi x6, x0, #4
