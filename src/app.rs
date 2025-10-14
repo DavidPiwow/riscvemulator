@@ -154,29 +154,38 @@ fn draw_main_window(state: &mut AppState) {
         .label("Test")
         .titlebar(false)
         .ui(&mut root_ui(), |ui| {
-            Group::new(hash!(), vec2(screen_width() - 20.0, 100.))
+            Group::new(hash!(), vec2(screen_width() - 20.0, screen_height() - 20.0))
                 .position(vec2(10., 10.))
                 .ui(ui, |ui| {
                     change_skin(ui);
 
-                    for n in names {
-                        if ui.button(None, n.clone()) {
-                            state.cur_state = CurrentAction::SelectProgram(n.clone());
-                            set_program(state);
-                        }
-                    }
+                    Group::new(hash!(), vec2(screen_width() - 20., 200.))
+                        .position(vec2(10., 10.))
+                        .ui(ui, |ui| {
+                            for n in names {
+                                if ui.button(None, n.clone()) {
+                                    state.cur_state = CurrentAction::SelectProgram(n.clone());
+                                    set_program(state);
+                                }
+                            }
+                        });
 
-                    if let CurrentAction::SelectProgram(p) = &state.cur_state {
-                        if ui.button(None,  format!("Run {}", p)) {
-                            state.cur_state = CurrentAction::RunProgram;
-                        }
-                    }
 
-                    if let CurrentAction::SelectProgram(p) = &state.cur_state {
-                        if ui.button(None, format!("View {}", p)) {
-                            state.cur_state = CurrentAction::ViewProgram;
-                        }
-                    }
+                    Group::new(hash!(), vec2(screen_width() - 20., 50.))
+                        .position(vec2(screen_width()/2., 10.))
+                        .ui(ui, |ui| {
+                            if let CurrentAction::SelectProgram(p) = &state.cur_state {
+                                if ui.button(None, format!("Run {}", p)) {
+                                    state.cur_state = CurrentAction::RunProgram;
+                                }
+                            }
+
+                            if let CurrentAction::SelectProgram(p) = &state.cur_state {
+                                if ui.button(None, format!("View {}", p)) {
+                                    state.cur_state = CurrentAction::ViewProgram;
+                                }
+                            }
+                        });
                 });
         });
 }
@@ -208,6 +217,7 @@ fn change_skin(ui: &mut Ui) {
         .color_hovered(DARKGRAY)
         .text_color_hovered(GRAY)
         .text_color(WHITE)
+        .margin(RectOffset::new(2.5,2.5,0.5,0.5))
         .build();
 
     ui.push_skin(&st.clone());

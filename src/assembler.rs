@@ -229,7 +229,6 @@ impl Assembler {
         let immp1 = ((data.2>>1 & 0xF) << 1 | (data.2 >> 11 & 0x1)) as u8;
         let immp2 = (((data.2 >> 12 & 0x1) << 6) | ((data.2) >> 5) & 0x3F) as u8;
 
-        println!("{:b}", (data.2 >> 12 & 0x1) << 6);
 
         binary |= (immp1 as u32) << 7;
 
@@ -239,7 +238,6 @@ impl Assembler {
 
         binary |= (immp2 as u32) << 25;
 
-        println!("{:b}", binary);
 
         binary
     }

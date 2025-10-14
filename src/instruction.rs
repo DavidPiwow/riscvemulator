@@ -42,7 +42,8 @@ fn funct7_f_u32(n: u32) -> u8 {
 
 #[inline(always)]
 fn imm_i_f_u32(n: u32) -> i16 {
-    ((n >> 20) & 0xFFF) as i16
+    println!("I {:b}", n);
+    ((((n >> 20) & 0xFFF) as i16) << 4) >> 4
 }
 
 #[inline(always)]
@@ -55,7 +56,7 @@ fn imm_b_f_u32(n: u32) -> i16 {
 
 #[inline(always)]
 fn imm_s_f_u32(n: u32) -> i16 {
-    ((n >> 25 & 0x7F) << 5 |  (n >> 7) & 0x1F) as i16
+    ((((n >> 25 & 0x7F) << 5 |  (n >> 7) & 0x1F) as i16) << 4) >> 4
 }
 
 

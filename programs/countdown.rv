@@ -1,0 +1,7 @@
+start:
+    addi x1, x0, 5        # x1 = counter = 5
+
+countdown:
+    addi x1, x1, -1       # decrement
+    bne  x1, x0, countdown
+    ebreak
