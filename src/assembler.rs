@@ -78,7 +78,7 @@ impl Assembler {
 
             }
         ).collect();
-        println!("{:?}", labels);
+
         Assembler {
             program: lines,
             instructions: get_info(),
@@ -99,7 +99,6 @@ impl Assembler {
         let mut index: usize = 0;
         for instruction in &self.program {
             if instruction.contains("ebreak") {
-                println!("BREAK");
                 bins.push(EBREAK);
                 break;
             }
@@ -134,7 +133,6 @@ impl Assembler {
             bins.push(bin);
             index += 1;
         }
-        println!("{:x?}",bins);
         bins
     }
 
@@ -163,7 +161,6 @@ impl Assembler {
         let mut parts = str.replace('('," ").replace(')',"").split_ascii_whitespace().skip(1).filter_map(|s|  {
             let val = s.replace('x',"").replace(',',"");
             if self.labels.contains_key(&val) {
-                println!("{}", (self.labels.get(&val).unwrap().clone() as i16-index as i16) * 4);
                 return Some((self.labels.get(&val).unwrap().clone() as i16 - index as i16) * 4)
             }
             val.parse::<i16>().ok()

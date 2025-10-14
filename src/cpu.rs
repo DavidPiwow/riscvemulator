@@ -60,6 +60,7 @@ impl CPU {
     pub fn reset(&mut self) {
         self.instruction_info = InstructionInfo::default();
         self.registers = [0; 32];
+        self.memory = [0; MEM_SIZE as usize];
         self.pc = MEM_START as u32;
         self.break_flag = false;
     }
@@ -98,8 +99,9 @@ impl CPU {
             | (self.memory[self.pc as usize + 3] as u32) << 24
     }
 
-    fn get_word(&self, base: u8, offset: i32) -> u32 {
+    fn get_word(&self, base: u32, offset: i32) -> u32 {
         let start = (base as i32 + offset) as usize;
+        println!("START: {}", start);
         self.memory[start] as u32
             | (self.memory[start + 1] as u32) << 8
             | (self.memory[start + 2] as u32) << 16
@@ -108,7 +110,7 @@ impl CPU {
 
     fn set_word(&mut self, word: u32, base: u32, offset: i32) {
         let start = (base as i32 + offset) as usize;
-        println!("start {}", start);
+
         self.memory[start] = (word & 0xFF) as u8 ;
         self.memory[start+ 1] = (word >> 8 & 0xFF) as u8 ;
         self.memory[start+ 2] = (word >> 16 & 0xFF) as u8 ;
@@ -416,13 +418,13 @@ impl CPU {
         // MEMORY
 
     fn load_word(&mut self, rd: u8, r1: u8, imm: i32) {
-        let word = self.get_word(r1, imm);
+        let word = self.get_word(self.registers[r1 as usize], imm);
+        println!("loading word {} from {} + {}", word, r1, imm);
         self.registers[rd as usize] = word;
     }
 
     fn store_word(&mut self, r1: u8, r2: u8, imm: i32) {
         let word = self.registers[r2 as usize];
-        println!("r2 {}", r2);
         self.set_word(word, self.registers[r1 as usize], imm);
 
     }
