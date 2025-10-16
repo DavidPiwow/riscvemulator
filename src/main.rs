@@ -16,5 +16,4 @@ async fn main()  {
         update_app(&mut state);
         next_frame().await
     }
-
 }

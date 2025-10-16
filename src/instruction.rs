@@ -47,17 +47,13 @@ fn imm_i_f_u32(n: u32) -> i16 {
 
 #[inline(always)]
 fn imm_b_f_u32(n: u32) -> i16 {
-    let val =
-        (((n>>31) & 0x1) << 11 | ((n>>7) & 0x1) << 10 |  ((n>>25)&0x3F) << 5 |  ((n >> 8) & 0xF) << 1  )as i16;
-    // (x << n) >> n sign extends x by n bits
-    (val<<4)>>4
+    (((((n>>31) & 0x1) << 11 | ((n>>7) & 0x1) << 10 |  ((n>>25)&0x3F) << 5 |  ((n >> 8) & 0xF) << 1  ) as i16) << 4) >> 4
 }
 
 #[inline(always)]
 fn imm_s_f_u32(n: u32) -> i16 {
     ((((n >> 25 & 0x7F) << 5 |  (n >> 7) & 0x1F) as i16) << 4) >> 4
 }
-
 
 pub struct RInstruction {
     pub opcode: u8,
@@ -181,5 +177,3 @@ impl Debug for SInstruction {
         )
     }
 }
-
-

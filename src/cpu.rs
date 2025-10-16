@@ -101,7 +101,6 @@ impl CPU {
 
     fn get_word(&self, base: u32, offset: i32) -> u32 {
         let start = (base as i32 + offset) as usize;
-        println!("START: {}", start);
         self.memory[start] as u32
             | (self.memory[start + 1] as u32) << 8
             | (self.memory[start + 2] as u32) << 16
@@ -419,7 +418,6 @@ impl CPU {
 
     fn load_word(&mut self, rd: u8, r1: u8, imm: i32) {
         let word = self.get_word(self.registers[r1 as usize], imm);
-        println!("loading word {} from {} + {}", word, r1, imm);
         self.registers[rd as usize] = word;
     }
 

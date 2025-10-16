@@ -29,7 +29,6 @@ fn get_info() -> HashMap<&'static str, (InstructionType, u8,u8,u8)> {
         ("bge",(BInstr, 0b1100011, 0x5, 0x00)),
 
         ("sw",(SInstr, 0b0100011, 0x2, 0x00)),
-
         ("lw", (IInstr, 0b0000011, 0x2, 0x00)),
 
         ("ebreak",(IInstr, 0b1110011, 0x00, 0x1)),
@@ -152,7 +151,6 @@ impl Assembler {
     }
 
     /*
-
 // rd, rd1, imm for i
 // r1, r2, imm for b
      */
@@ -239,9 +237,3 @@ impl Assembler {
         binary
     }
 }
-
-
-
-
-
-
