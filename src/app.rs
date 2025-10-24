@@ -136,7 +136,7 @@ fn describe_mem_reg(ui: &mut Ui,cpu: &cpu::CPU)  {
         .ui(ui, |ui| {
             let mut i: u32 = 0;
             for x in cpu.view_registers() {
-                ui.label(None, &format!("x{}: 0x{:x}", i, *x as i32));
+                ui.label(None, &format!("x{}: {}", i, *x as i32));
                 i += 1;
             }
 

@@ -132,6 +132,9 @@ impl Assembler {
             bins.push(bin);
             index += 1;
         }
+        bins.iter().for_each(|f|{
+           println!("{:b}",f);
+        });
         bins
     }
 
