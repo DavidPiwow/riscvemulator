@@ -131,7 +131,7 @@ fn describe_cpu(ui: &mut Ui,cpu: &cpu::CPU)  {
 }
 
 fn describe_mem_reg(ui: &mut Ui,cpu: &cpu::CPU)  {
-    Group::new(hash!(), vec2(screen_width()/2., 200.))
+    Group::new(hash!(), vec2(screen_width()/2., 3200.))
         .position(vec2(10., 50.))
         .ui(ui, |ui| {
             let mut i: u32 = 0;

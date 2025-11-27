@@ -1,37 +1,34 @@
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{BufRead, BufReader, Read};
 use crate::instruction::InstructionType;
 use crate::instruction::InstructionType::{BInstr, IInstr, RInstr, SInstr};
 
 const EBREAK: u32 = 0b00000000000100000000000001110011;
 
+//noinspection ALL
 // store type, opcode, funct3, funct7/imm for some
 fn get_info() -> HashMap<&'static str, (InstructionType, u8,u8,u8)> {
-    HashMap::from([
-        ("add",(RInstr, 0b0110011, 0x0, 0x00)),
-        ("sub",(RInstr, 0b0110011, 0x0, 0x20)),
-        ("xor",(RInstr, 0b0110011, 0x4, 0x00)),
-        ("or",(RInstr, 0b0110011, 0x6, 0x00)),
-        ("and",(RInstr, 0b0110011, 0x7, 0x00)),
-        ("sll",(RInstr, 0b0110011, 0x1, 0x00)),
-        ("srl",(RInstr, 0b0110011, 0x5, 0x00)),
-        ("sra",(RInstr, 0b0110011, 0x5, 0x20)),
-
-        ("addi",(IInstr, 0b0010011, 0x0, 0x00)),
-        ("xori",(IInstr, 0b0010011, 0x4, 0x00)),
-        ("ori",(IInstr, 0b0010011, 0x6, 0x00)),
-        ("andi",(IInstr, 0b0010011, 0x7, 0x00)),
-
-        ("beq",(BInstr, 0b1100011, 0x0, 0x00)),
-        ("bne",(BInstr, 0b1100011, 0x1, 0x00)),
-        ("blt",(BInstr, 0b1100011, 0x4, 0x00)),
-        ("bge",(BInstr, 0b1100011, 0x5, 0x00)),
-
-        ("sw",(SInstr, 0b0100011, 0x2, 0x00)),
+    HashMap::from_iter([
+        ("add", (RInstr, 0b0110011, 0x0, 0x00)),
+        ("sub", (RInstr, 0b0110011, 0x0, 0x20)),
+        ("xor", (RInstr, 0b0110011, 0x4, 0x00)),
+        ("or", (RInstr, 0b0110011, 0x6, 0x00)),
+        ("and", (RInstr, 0b0110011, 0x7, 0x00)),
+        ("sll", (RInstr, 0b0110011, 0x1, 0x00)),
+        ("srl", (RInstr, 0b0110011, 0x5, 0x00)),
+        ("sra", (RInstr, 0b0110011, 0x5, 0x20)),
+        ("addi", (IInstr, 0b0010011, 0x0, 0x00)),
+        ("xori", (IInstr, 0b0010011, 0x4, 0x00)),
+        ("ori", (IInstr, 0b0010011, 0x6, 0x00)),
+        ("andi", (IInstr, 0b0010011, 0x7, 0x00)),
+        ("beq", (BInstr, 0b1100011, 0x0, 0x00)),
+        ("bne", (BInstr, 0b1100011, 0x1, 0x00)),
+        ("blt", (BInstr, 0b1100011, 0x4, 0x00)),
+        ("bge", (BInstr, 0b1100011, 0x5, 0x00)),
+        ("sw", (SInstr, 0b0100011, 0x2, 0x00)),
         ("lw", (IInstr, 0b0000011, 0x2, 0x00)),
-
-        ("ebreak",(IInstr, 0b1110011, 0x00, 0x1)),
+        ("ebreak", (IInstr, 0b1110011, 0x00, 0x1)),
     ])
 }
 
@@ -132,9 +129,9 @@ impl Assembler {
             bins.push(bin);
             index += 1;
         }
-        bins.iter().for_each(|f|{
-           println!("{:b}",f);
-        });
+        for f in &bins {
+            println!("{:b}",f);
+        }
         bins
     }
 
