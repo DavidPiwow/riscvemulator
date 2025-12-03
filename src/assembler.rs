@@ -4,9 +4,9 @@ use std::io::{BufRead, BufReader, Read};
 use crate::instruction::InstructionType;
 use crate::instruction::InstructionType::{BInstr, IInstr, RInstr, SInstr};
 
+// i dont know what ebreak actually does and its formed slightly differently than the rest so
 const EBREAK: u32 = 0b00000000000100000000000001110011;
 
-//noinspection ALL
 // store type, opcode, funct3, funct7/imm for some
 fn get_info() -> HashMap<&'static str, (InstructionType, u8,u8,u8)> {
     HashMap::from_iter([
@@ -34,11 +34,15 @@ fn get_info() -> HashMap<&'static str, (InstructionType, u8,u8,u8)> {
 
 pub struct Assembler {
     program: Vec<String>,
+    // hashmaps cant be made static so just give the assembler one
     instructions: HashMap<&'static str, (InstructionType, u8,u8,u8)>,
+    
+    // labels are stored with an offset from the start of the program based off instruction count
     labels: HashMap<String, usize>,
 }
 
 impl Assembler {
+    // view the program as text
     pub fn view_program(&self) -> &Vec<String> {
         &self.program
     }
@@ -54,21 +58,30 @@ impl Assembler {
         if reader.read_to_string(&mut str).is_err() {
             panic!("Failed to read from file");
         };
+        
         let mut ins_count: usize = 0;
         let mut labels: HashMap<String, usize> = HashMap::new();
 
+        
         let lines: Vec<String> = str.lines().filter_map(|s|
             if s.is_empty() {
+                // skip over new lines
                 None
             } else {
-                if s.contains("#") {
-                    ins_count += 1;
-                    return Some(s.split("#").nth(0).unwrap().to_string());
-                } else if s.contains(":") {
+                // if its a label, we dont include it in the instructions and instead
+                // insert into label hashmap to refer to it later
+                if s.contains(":") {
                     let name = s.split(":").nth(0).unwrap();
                     labels.insert(name.to_string(), ins_count);
                     return None;
                 }
+                
+                if s.contains("#") {
+                    // strip comments off each instruction
+                    ins_count += 1;
+                    return Some(s.split("#").nth(0).unwrap().to_string());
+                }
+                
                 ins_count += 1;
                 Some(s.to_string())
 
@@ -135,7 +148,10 @@ impl Assembler {
         bins
     }
 
-    // returns rd, r1, r2
+    // both extract functions take an instruction in riscv assembly and return the destinations inside
+    
+    // extracts instructions that have comma seperated list of 3 values
+    // usually of form rd, rs1, rs2 (can not include an imm value)
     fn extract_vals(&self, str: &String) -> (u8, u8, u8) {
         let parts = str.split_ascii_whitespace().skip(1).filter_map(|s|  {
             s.replace('x',"").replace(',',"").parse::<u8>().ok()
@@ -153,9 +169,13 @@ impl Assembler {
     /*
 // rd, rd1, imm for i
 // r1, r2, imm for b
+// this can include immediate values from load/store instructions of the form
+// imm(rs1). in this case we have to swap the 2nd u8 var with the unsigned i16 as 
+// imm has to be stored there
      */
 
     fn extract_vals_i(&self, str: &String, index: usize) -> (u8, u8, i16) {
+        // we will deal with everything as an i16 until we know which is the proper imm value
         let mut parts = str.replace('('," ").replace(')',"").split_ascii_whitespace().skip(1).filter_map(|s|  {
             let val = s.replace('x',"").replace(',',"");
             if self.labels.contains_key(&val) {
@@ -164,20 +184,26 @@ impl Assembler {
             val.parse::<i16>().ok()
         }).collect::<Vec<i16>>();
 
+        // paranthesis only can be in load/store instructions so its fine to just swap like this
         if str.contains("(") {
             let t = parts[1];
             parts[1]=parts[2];
             parts[2]=t;
         }
+        // register destinations are stored in the first two u8s, so make sure it is within range
         if parts[0] >= 32 || parts[0] < 0 || parts[1] >= 32 || parts[1] < 0 {
             panic!("Malformed i instruction {}: invalid register(s) || {:?}", str, parts);
         }
+        
+        // imm has to fit within 12 bit signed int
         if parts[2] < -2048 || parts[2] > 2047 {
             panic!("{} is not a valid imm value", parts[2]);
         }
 
         (parts[0] as u8, parts[1] as u8, parts[2])
     }
+    
+    // takes information about an instruction in and converts it into its binary form
 
     fn info_to_r(&self, info: &(InstructionType, u8, u8, u8), registers: &(u8, u8, u8)) -> u32 {
         let mut binary = (info.1 & 0x7F) as u32; // opcode
@@ -203,8 +229,8 @@ impl Assembler {
 
 
     fn info_to_s(&self, info: &(InstructionType, u8, u8, u8), data: &(u8, u8, i16)) -> u32 {
-        let mut binary = (info.1 & 0x7F) as u32;
-        let immp1 = (data.2 as u32) & 0x1F;
+        let mut binary = (info.1 & 0x7F) as u32; // opcode
+        let immp1 = (data.2 as u32) & 0x1F; // imm values are split in two places 
         let immp2 = data.2 as u32 >> 5 & 0x7F;
 
 

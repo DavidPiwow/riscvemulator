@@ -8,6 +8,7 @@ use std::fs;
 use ui::{hash, widgets};
 use crate::cpu;
 
+// its like a state but its an action 
 enum CurrentAction {
     SelectProgram(String),
     RunProgram,
@@ -15,6 +16,7 @@ enum CurrentAction {
     Wait,
 }
 
+// i mean why not just put the assembler and cpu here #easy
 pub struct AppState {
     cpu: CPU,
     assembler: Option<Assembler>,
@@ -33,7 +35,7 @@ impl Default for AppState {
 
 fn get_file_names() -> Vec<String> {
     let dir = fs::read_dir("./programs").unwrap();
-
+    // strip file ending to display the name
     dir.map(|x| {
         x.unwrap()
             .file_name()
@@ -45,6 +47,7 @@ fn get_file_names() -> Vec<String> {
 }
 
 pub fn update_app(state: &mut AppState) {
+    // ok what should we do next, draw smth special or the main thing 
     match state.cur_state {
         CurrentAction::RunProgram => draw_cpu_view(state),
         CurrentAction::ViewProgram => draw_program_view(state),
@@ -52,6 +55,7 @@ pub fn update_app(state: &mut AppState) {
     };
 }
 
+// i hate making ui i bet this looks so bad on other screens
 fn describe_program(ui: &mut Ui, program: &Vec<String>) {
     Group::new(hash!(), vec2(screen_width()/2., screen_height()))
         .position(vec2(10., 50.))
@@ -89,14 +93,18 @@ fn draw_cpu_view(state: &mut AppState) {
             Group::new(hash!(), vec2(screen_width() - 20.0, screen_height() - 20.0))
                 .position(vec2(10., 10.))
                 .ui(ui, |ui| {
-                    ui.label(None, &format!("Program Counter: {}", state.cpu.get_pc()));
+                    // need to show what the cpu is up to
+                    ui.label(None, &format!("Program Counter: {}", state.cpu.get_pc())); 
+                    // also control the program flow (need automatic way later)
                     if ui.button(None, "Step Program") {
                         state.cpu.step();
                     }
 
+                    // reset (now doesnt reset all of memory (which has the program))
                     if ui.button(vec2(250., 10.), "Reset") {
                         state.cpu.reset();
                     }
+                    // its like reset but also escapes the program to load another
                     if ui.button(vec2(300., 10.), "Back") {
                         state.cur_state = CurrentAction::Wait;
                         state.cpu.reset();
@@ -108,6 +116,8 @@ fn draw_cpu_view(state: &mut AppState) {
         });
 }
 
+
+// show what instruction the cpu has loaded and current values of it
 fn describe_cpu(ui: &mut Ui,cpu: &cpu::CPU)  {
     let info = cpu.view_instr_info();
     if info.name.is_none() {
@@ -130,10 +140,13 @@ fn describe_cpu(ui: &mut Ui,cpu: &cpu::CPU)  {
         });
 }
 
+// show the memory and register contents of the cpu at each step
 fn describe_mem_reg(ui: &mut Ui,cpu: &cpu::CPU)  {
     Group::new(hash!(), vec2(screen_width()/2., 3200.))
         .position(vec2(10., 50.))
         .ui(ui, |ui| {
+            
+            
             let mut i: u32 = 0;
             for x in cpu.view_registers() {
                 ui.label(None, &format!("x{}: {}", i, *x as i32));
@@ -148,6 +161,7 @@ fn describe_mem_reg(ui: &mut Ui,cpu: &cpu::CPU)  {
         });
 }
 
+// draws all program names, select and run buttons
 fn draw_main_window(state: &mut AppState) {
     let names = get_file_names();
     widgets::Window::new(hash!(), vec2(0., 0.), vec2(screen_width(), screen_height()))
@@ -190,6 +204,7 @@ fn draw_main_window(state: &mut AppState) {
         });
 }
 
+// deals with loading a program into memory once loaded from the gui
 fn set_program(state: &mut AppState) {
     if let CurrentAction::SelectProgram(n) = &mut state.cur_state {
         let assembler = Assembler::open_file(&format!("./programs/{}.rv", n));
@@ -206,6 +221,7 @@ fn set_program(state: &mut AppState) {
     }
 }
 
+// the default way it looks is so ugly i think if i apply this to root it changes descendants
 fn change_skin(ui: &mut Ui) {
     let mut st = ui.default_skin();
 

@@ -5,6 +5,7 @@ use crate::instruction::{BInstruction, IInstruction, InstructionType, RInstructi
 const MEM_START: usize = 0x100;
 const MEM_SIZE: u32 = 0x200;
 
+// used to store info on the current instruction 
 #[derive(Debug)]
 pub struct InstructionInfo {
     pub instr_type: Option<InstructionType>,
@@ -51,16 +52,16 @@ impl CPU {
     pub fn view_registers(&self) -> &[u32; 32] {
         &self.registers
     }
-    pub fn view_memory(&self) -> &[u8; MEM_SIZE as usize] {&self.memory}
-
-    pub fn new() -> CPU {
-        CPU::default()
+    pub fn view_memory(&self) -> &[u8; MEM_SIZE as usize] {
+        &self.memory
     }
-
+    
     pub fn reset(&mut self) {
         self.instruction_info = InstructionInfo::default();
         self.registers = [0; 32];
-        self.memory = [0; MEM_SIZE as usize];
+        for i in 0..MEM_START {
+            self.memory[i] = 0;
+        }
         self.pc = MEM_START as u32;
         self.break_flag = false;
     }
@@ -73,6 +74,7 @@ impl CPU {
         }
         self.pc = MEM_START as u32;
     }
+    
     pub fn run(&mut self) {
         let mut result = self.step();
         while result {
@@ -303,13 +305,12 @@ impl CPU {
     }
 
     // ARITHMETIC
-    // rd = r1 + r2
+    
     #[inline(always)]
     fn add(&mut self, rd: u8, r1: u8, r2: u8) {
         self.registers[rd as usize] = self.registers[r1 as usize] + self.registers[r2 as usize];
     }
 
-    // rd = r1 - r2
     #[inline(always)]
     fn sub(&mut self, rd: u8, r1: u8, r2: u8) {
         self.registers[rd as usize] = (self.registers[r1 as usize] as i32 - self.registers[r2 as usize] as i32) as u32;
@@ -339,11 +340,11 @@ impl CPU {
     fn shift_right_logical(&mut self, rd: u8, r1: u8, r2: u8) {
         self.registers[rd as usize] = (self.registers[r1 as usize]) >> self.registers[r2 as usize];
     }
-
+    
     // keeps sign
     #[inline(always)]
     fn shift_right_arithmetic(&mut self, rd: u8, r1: u8, r2: u8) {
-        self.registers[rd as usize] = self.registers[r1 as usize]  >> self.registers[r2 as usize];
+        self.registers[rd as usize] = (self.registers[r1 as usize]  as i32 >> self.registers[r2 as usize] as i32) as u32;
     }
 
     // rd = r1 + imm (u32?)

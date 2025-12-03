@@ -45,21 +45,21 @@ fn imm_i_f_u32(n: u32) -> i16 {
     ((((n >> 20) & 0xFFF) as i16) << 4) >> 4
 }
 
+
+// in b instruction formats the imm values are split up like
+// 12|10:5 ---- 4:1|11 which is why it looks so weird
 #[inline(always)]
 fn imm_b_f_u32(n: u32) -> i16 {
     (((((n>>31) & 0x1) << 11 | ((n>>7) & 0x1) << 10 |  ((n>>25)&0x3F) << 5 |  ((n >> 8) & 0xF) << 1  ) as i16) << 4) >> 4
 }
 
+// slightly less weird and its split up like
+// 11:5 ---- 4:0 
 #[inline(always)]
 fn imm_s_f_u32(n: u32) -> i16 {
     ((((n >> 25 & 0x7F) << 5 |  (n >> 7) & 0x1F) as i16) << 4) >> 4
 }
 
-
-#[inline(always)]
-fn imm_j_f_u32(n: u32) -> i32 {
-    ((n >> 12 & 0x7f) << 12 )  as i32
-}
 
 pub struct RInstruction {
     pub opcode: u8,
@@ -180,33 +180,6 @@ impl Debug for SInstruction {
             f,
             "OPCODE: {:b} | RS1: R{} | RS2: R{} | IMM: {} ",
             self.opcode, self.rs1, self.rs2, self.imm
-        )
-    }
-}
-
-
-pub struct JInstruction {
-    pub opcode: u8,
-    pub rd: u8,
-    pub imm: i32,
-}
-
-impl JInstruction {
-    pub fn new(n: u32) -> Self {
-        Self {
-            opcode: opcode_f_u32(n),
-            rd: rd_f_u32(n),
-            imm: imm_j_f_u32(n),
-        }
-    }
-}
-
-impl Debug for JInstruction {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "OPCODE: {:b} | RD: R{} | IMM: {} ",
-            self.opcode, self.rd, self.imm
         )
     }
 }
